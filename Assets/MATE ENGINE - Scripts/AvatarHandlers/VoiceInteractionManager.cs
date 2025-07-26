@@ -1,18 +1,3 @@
-        private IEnumerator AnimateLipSync(AudioClip audioClip)
-        {
-            // TODO: Implement lip sync animation logic
-            float duration = audioClip ? audioClip.length : 0f;
-            float timer = 0f;
-            while (timer < duration)
-            {
-                // Example: animate blendshapes or avatar mouth
-                // blendshapeController?.SetLipSyncValue(Random.value);
-                yield return null;
-                timer += Time.deltaTime;
-            }
-            // Reset blendshape/mouth after lip sync
-            // blendshapeController?.SetLipSyncValue(0f);
-        }
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -455,13 +440,18 @@ namespace MateEngine.Voice
         {
             isProcessing = true;
             
+            AudioClip processedClip = null;
+            byte[] audioData = null;
+            bool shouldUseCloud = false;
+            
             try
             {
                 // Trim silence and apply basic processing
-                AudioClip processedClip = AudioUtils.TrimSilence(recordedClip, voiceSettings.silenceThreshold);
+                processedClip = AudioUtils.TrimSilence(recordedClip, voiceSettings.silenceThreshold);
                 if (processedClip == null || !AudioUtils.ContainsSpeech(processedClip))
                 {
                     if (statusText) statusText.text = "No speech detected";
+                    isProcessing = false;
                     yield break;
                 }
                 
@@ -470,11 +460,13 @@ namespace MateEngine.Voice
                     // Use local voice processing
                     localVoiceProcessor.ProcessSpeechToText(processedClip);
                     // Processing continues in OnSpeechRecognized callback
+                    isProcessing = false;
                 }
                 else
                 {
-                    // Use cloud API processing
-                    byte[] audioData = AudioUtils.AudioClipToWav(processedClip);
+                    // Prepare for cloud API processing
+                    audioData = AudioUtils.AudioClipToWav(processedClip);
+                    shouldUseCloud = true;
                 }
             }
             catch (Exception e)
@@ -484,29 +476,11 @@ namespace MateEngine.Voice
                 isProcessing = false;
                 yield break;
             }
-            if (!useLocalVoiceProcessing || localVoiceProcessor == null)
+            
+            // Use cloud API processing outside of try/catch
+            if (shouldUseCloud && audioData != null)
             {
-                // Use cloud API processing
-                byte[] audioData = AudioUtils.AudioClipToWav(processedClip);
                 yield return StartCoroutine(SendSpeechToTextRequest(audioData));
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[VoiceInteraction] Error processing voice input: {e.Message}");
-                if (statusText) statusText.text = "Error processing voice";
-                isProcessing = false;
-                if (processingIndicator) processingIndicator.SetActive(false);
-            }
-            finally
-            {
-                // Only reset UI state if using cloud processing (local processing handles this in callbacks)
-                if (!useLocalVoiceProcessing)
-                {
-                    isProcessing = false;
-                    if (processingIndicator) processingIndicator.SetActive(false);
-                    if (statusText) statusText.text = "Press V to talk";
-                }
             }
         }
         
@@ -811,6 +785,22 @@ namespace MateEngine.Voice
             isProcessing = false;
             if (processingIndicator) processingIndicator.SetActive(false);
             if (statusText) statusText.text = "Test completed";
+        }
+        
+        private IEnumerator AnimateLipSync(AudioClip audioClip)
+        {
+            // TODO: Implement lip sync animation logic
+            float duration = audioClip ? audioClip.length : 0f;
+            float timer = 0f;
+            while (timer < duration)
+            {
+                // Example: animate blendshapes or avatar mouth
+                // blendshapeController?.SetLipSyncValue(Random.value);
+                yield return null;
+                timer += Time.deltaTime;
+            }
+            // Reset blendshape/mouth after lip sync
+            // blendshapeController?.SetLipSyncValue(0f);
         }
     }
 }

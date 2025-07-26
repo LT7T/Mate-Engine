@@ -157,15 +157,11 @@ namespace MateEngine.Voice.Tests
                 LogTest($"Primary microphone: {device}");
                 
                 // Test microphone recording
+                AudioClip testClip = null;
                 try
                 {
-                    AudioClip testClip = Microphone.Start(device, false, 1, 44100);
-                }
-                catch (System.Exception e)
-                {
-                    LogTestResult($"Microphone recording failed: {e.Message}", false);
-                }
-                yield return new WaitForSeconds(0.1f);
+                    testClip = Microphone.Start(device, false, 1, 44100);
+                    yield return new WaitForSeconds(0.1f);
                     Microphone.End(device);
                     
                     bool recordingSuccessful = testClip != null;
