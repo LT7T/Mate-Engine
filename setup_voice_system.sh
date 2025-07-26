@@ -6,20 +6,47 @@ echo "================================================"
 echo "Mate Engine Voice System Setup"
 echo "================================================"
 
-# Check if Python is available
-if ! command -v python3 &> /dev/null; then
-    echo "ERROR: Python3 is not installed or not in PATH"
-    echo "Please install Python 3.8+ from python.org or your package manager"
+# Check for optimal Python version for TTS compatibility
+# TTS requires Python >=3.9.0, <3.12, so Python 3.11 is optimal
+PYTHON_CMD=""
+
+if command -v conda &> /dev/null; then
+    echo "Conda detected. Checking for Python 3.11 environment..."
+    if conda env list | grep -q "voice-py311"; then
+        echo "Using existing Python 3.11 conda environment..."
+        PYTHON_CMD="conda run -n voice-py311 python"
+    else
+        echo "Creating Python 3.11 conda environment for TTS compatibility..."
+        conda create -n voice-py311 python=3.11 -y
+        PYTHON_CMD="conda run -n voice-py311 python"
+    fi
+elif command -v python3.11 &> /dev/null; then
+    echo "Python 3.11 found locally..."
+    PYTHON_CMD="python3.11"
+elif command -v python3 &> /dev/null; then
+    echo "Python3 found. Checking version compatibility..."
+    VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+    if python3 -c "import sys; exit(0 if (sys.version_info.major == 3 and 9 <= sys.version_info.minor < 12) else 1)"; then
+        echo "Python $VERSION is compatible with TTS"
+        PYTHON_CMD="python3"
+    else
+        echo "WARNING: Python $VERSION may not be compatible with TTS (requires 3.9-3.11)"
+        echo "Proceeding anyway, but TTS installation may fail..."
+        PYTHON_CMD="python3"
+    fi
+else
+    echo "ERROR: No compatible Python found"
+    echo "Please install Python 3.11 for optimal TTS compatibility"
     exit 1
 fi
 
-echo "Python found. Checking version..."
-python3 -c "import sys; print(f'Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')"
+echo "Using Python command: $PYTHON_CMD"
+$PYTHON_CMD -c "import sys; print(f'Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')"
 
 # Create virtual environment if it doesn't exist
 if [ ! -d "venv" ]; then
-    echo "Creating Python virtual environment..."
-    python3 -m venv venv
+    echo "Creating virtual environment with compatible Python..."
+    $PYTHON_CMD -m venv venv
     if [ $? -ne 0 ]; then
         echo "ERROR: Failed to create virtual environment"
         exit 1

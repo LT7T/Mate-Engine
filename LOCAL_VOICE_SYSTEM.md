@@ -41,11 +41,11 @@ The Mate Engine now includes a complete local voice processing system that provi
 
 If you prefer manual setup:
 
-1. **Install Python 3.8+** from [python.org](https://python.org)
+1. **Install Python 3.11** from [python.org](https://python.org) (optimal for TTS compatibility)
 
 2. **Create virtual environment:**
    ```bash
-   python -m venv venv
+   python3.11 -m venv venv
    source venv/bin/activate  # Linux/macOS
    venv\Scripts\activate.bat  # Windows
    ```
@@ -55,6 +55,8 @@ If you prefer manual setup:
    cd WhisperServer && pip install -r requirements.txt && cd ..
    cd TTSServer && pip install -r requirements.txt && cd ..
    ```
+
+**Note**: TTS requires Python 3.9-3.11. Python 3.12+ is not supported by Coqui TTS.
 
 ## How It Works
 
@@ -200,10 +202,11 @@ python TTSServer/tts_server.py --port 8002
 - **OS**: Windows 10, macOS 10.15, Ubuntu 18.04+
 - **RAM**: 4GB (8GB recommended)
 - **Storage**: 2GB free space for AI models
-- **Python**: 3.8 or higher
+- **Python**: 3.11 (optimal for TTS compatibility) or 3.9-3.11 range
 - **Internet**: Only for LLM chat (not voice processing)
 
-### Recommended
+### Recommended  
+- **Python**: 3.11 (highest version with full TTS support)
 - **RAM**: 16GB for better performance
 - **GPU**: NVIDIA GPU with CUDA support
 - **Storage**: SSD for faster model loading

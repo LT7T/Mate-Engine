@@ -1,7 +1,7 @@
-# TTS Server Dependencies  
+# TTS Server Dependencies - Python 3.9-3.11 Required for Coqui TTS
 flask==2.3.3
 flask-cors==4.0.0
-TTS>=0.15.0
+TTS==0.22.0
 torch>=2.0.0
 torchaudio>=2.0.0
 soundfile>=0.12.0
