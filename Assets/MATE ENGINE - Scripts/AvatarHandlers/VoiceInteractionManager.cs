@@ -53,6 +53,11 @@ namespace MateEngine.Voice
         public Animator avatarAnimator;
         public UniversalBlendshapes blendshapeController;
         
+        [Header("Local Voice Processing")]
+        public bool useLocalVoiceProcessing = true;
+        public VoiceServerManager voiceServerManager;
+        public LocalVoiceProcessor localVoiceProcessor;
+        
         // Private members
         private AudioClip recordedClip;
         private bool isRecording = false;
@@ -94,16 +99,202 @@ namespace MateEngine.Voice
                 return;
             }
             
-            // Validate settings
-            if (string.IsNullOrEmpty(voiceSettings.apiKey))
+            // Initialize local voice processing if enabled
+            if (useLocalVoiceProcessing)
             {
-                Debug.LogWarning("[VoiceInteraction] API key not set. Voice interaction will not work.");
+                InitializeLocalVoiceProcessing();
+            }
+            else
+            {
+                // Validate API settings for cloud processing
+                if (string.IsNullOrEmpty(voiceSettings.apiKey))
+                {
+                    Debug.LogWarning("[VoiceInteraction] API key not set. Voice interaction will not work.");
+                }
             }
             
             // Initialize UI
             if (listeningIndicator) listeningIndicator.SetActive(false);
             if (processingIndicator) processingIndicator.SetActive(false);
+            if (statusText) statusText.text = useLocalVoiceProcessing ? "Starting voice servers..." : "Press V to talk";
+        }
+        
+        private void InitializeLocalVoiceProcessing()
+        {
+            // Find or create voice server manager
+            if (voiceServerManager == null)
+            {
+                voiceServerManager = FindFirstObjectByType<VoiceServerManager>();
+                if (voiceServerManager == null)
+                {
+                    GameObject serverObj = new GameObject("VoiceServerManager");
+                    voiceServerManager = serverObj.AddComponent<VoiceServerManager>();
+                    Debug.Log("[VoiceInteraction] Created VoiceServerManager");
+                }
+            }
+            
+            // Find or create local voice processor
+            if (localVoiceProcessor == null)
+            {
+                localVoiceProcessor = FindFirstObjectByType<LocalVoiceProcessor>();
+                if (localVoiceProcessor == null)
+                {
+                    GameObject processorObj = new GameObject("LocalVoiceProcessor");
+                    localVoiceProcessor = processorObj.AddComponent<LocalVoiceProcessor>();
+                    localVoiceProcessor.serverManager = voiceServerManager;
+                    Debug.Log("[VoiceInteraction] Created LocalVoiceProcessor");
+                }
+            }
+            
+            // Subscribe to events
+            VoiceServerManager.OnServersReady += OnVoiceServersReady;
+            VoiceServerManager.OnServersError += OnVoiceServersError;
+            LocalVoiceProcessor.OnSpeechRecognized += OnSpeechRecognized;
+            LocalVoiceProcessor.OnSpeechGenerated += OnSpeechGenerated;
+            LocalVoiceProcessor.OnProcessingError += OnVoiceProcessingError;
+            
+            Debug.Log("[VoiceInteraction] Local voice processing initialized");
+        }
+        
+        private void OnDestroy()
+        {
+            // Unsubscribe from events
+            VoiceServerManager.OnServersReady -= OnVoiceServersReady;
+            VoiceServerManager.OnServersError -= OnVoiceServersError;
+            LocalVoiceProcessor.OnSpeechRecognized -= OnSpeechRecognized;
+            LocalVoiceProcessor.OnSpeechGenerated -= OnSpeechGenerated;
+            LocalVoiceProcessor.OnProcessingError -= OnVoiceProcessingError;
+        }
+        
+        private void OnVoiceServersReady()
+        {
+            Debug.Log("[VoiceInteraction] Voice servers ready!");
             if (statusText) statusText.text = "Press V to talk";
+        }
+        
+        private void OnVoiceServersError()
+        {
+            Debug.LogError("[VoiceInteraction] Voice servers failed to start!");
+            if (statusText) statusText.text = "Voice system error";
+        }
+        
+        private void OnSpeechRecognized(string text)
+        {
+            Debug.Log($"[VoiceInteraction] Speech recognized: \"{text}\"");
+            StartCoroutine(ProcessVoiceCommand(text));
+        }
+        
+        private void OnSpeechGenerated(AudioClip audioClip)
+        {
+            Debug.Log("[VoiceInteraction] Speech generated, playing audio");
+            PlayResponseAudio(audioClip);
+        }
+        
+        private void OnVoiceProcessingError(string error)
+        {
+            Debug.LogError($"[VoiceInteraction] Voice processing error: {error}");
+            if (statusText) statusText.text = $"Error: {error}";
+            isProcessing = false;
+            if (processingIndicator) processingIndicator.SetActive(false);
+        }
+        
+        private IEnumerator ProcessVoiceCommand(string userMessage)
+        {
+            Debug.Log($"[VoiceInteraction] Processing voice command: \"{userMessage}\"");
+            if (statusText) statusText.text = "Thinking...";
+            
+            if (useLocalVoiceProcessing)
+            {
+                // For local processing, we can either use the cloud LLM for chat or implement a local LLM
+                // For now, we'll use the existing cloud chat API and local TTS
+                yield return StartCoroutine(SendChatRequestLocal(userMessage));
+            }
+            else
+            {
+                // Use existing cloud processing
+                yield return StartCoroutine(SendChatRequest(userMessage));
+            }
+        }
+        
+        private IEnumerator SendChatRequestLocal(string userMessage)
+        {
+            // This uses the same chat API as before but will use local TTS for the response
+            var messages = new[]
+            {
+                new { role = "system", content = voiceSettings.systemPrompt },
+                new { role = "user", content = userMessage }
+            };
+            
+            var requestData = new
+            {
+                model = voiceSettings.chatModel,
+                messages = messages,
+                max_tokens = (int)voiceSettings.maxTokens,
+                temperature = voiceSettings.temperature
+            };
+            
+            string jsonData = JsonConvert.SerializeObject(requestData);
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            
+            string url = voiceSettings.baseUrl.TrimEnd('/') + "/chat/completions";
+            
+            using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
+            {
+                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                request.downloadHandler = new DownloadHandlerBuffer();
+                request.SetRequestHeader("Content-Type", "application/json");
+                request.SetRequestHeader("Authorization", $"Bearer {voiceSettings.apiKey}");
+                
+                yield return request.SendWebRequest();
+                
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    var response = JsonConvert.DeserializeObject<Dictionary<string, object>>(request.downloadHandler.text);
+                    
+                    if (response.ContainsKey("choices"))
+                    {
+                        var choices = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(response["choices"].ToString());
+                        if (choices.Count > 0)
+                        {
+                            var message = JsonConvert.DeserializeObject<Dictionary<string, object>>(choices[0]["message"].ToString());
+                            string aiResponse = message["content"].ToString();
+                            
+                            Debug.Log($"[VoiceInteraction] AI Response: {aiResponse}");
+                            
+                            if (statusText) statusText.text = $"AI: {aiResponse}";
+                            
+                            // Convert AI response to speech using local TTS
+                            if (localVoiceProcessor != null)
+                            {
+                                localVoiceProcessor.ProcessTextToSpeech(aiResponse);
+                                // Audio will be played in OnSpeechGenerated callback
+                            }
+                            else
+                            {
+                                // Fallback to cloud TTS
+                                yield return StartCoroutine(SendTextToSpeechRequest(aiResponse));
+                            }
+                        }
+                    }
+                    
+                    // Reset processing state
+                    isProcessing = false;
+                    if (processingIndicator) processingIndicator.SetActive(false);
+                    if (statusText && statusText.text.StartsWith("AI:")) 
+                    {
+                        // Keep the AI response visible for a moment, then reset
+                        yield return new WaitForSeconds(2f);
+                        if (statusText) statusText.text = "Press V to talk";
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"[VoiceInteraction] Chat Error: {request.error}");
+                    if (statusText) statusText.text = "AI request failed";
+                    isProcessing = false;
+                    if (processingIndicator) processingIndicator.SetActive(false);
+                }
+            }
         }
         
         private void HandleVoiceInput()
@@ -259,22 +450,35 @@ namespace MateEngine.Voice
                     yield break;
                 }
                 
-                // Convert audio to WAV format for API
-                byte[] audioData = AudioUtils.AudioClipToWav(processedClip);
-                
-                // Send to Speech-to-Text API
-                yield return StartCoroutine(SendSpeechToTextRequest(audioData));
+                if (useLocalVoiceProcessing && localVoiceProcessor != null)
+                {
+                    // Use local voice processing
+                    localVoiceProcessor.ProcessSpeechToText(processedClip);
+                    // Processing continues in OnSpeechRecognized callback
+                }
+                else
+                {
+                    // Use cloud API processing
+                    byte[] audioData = AudioUtils.AudioClipToWav(processedClip);
+                    yield return StartCoroutine(SendSpeechToTextRequest(audioData));
+                }
             }
             catch (Exception e)
             {
                 Debug.LogError($"[VoiceInteraction] Error processing voice input: {e.Message}");
                 if (statusText) statusText.text = "Error processing voice";
+                isProcessing = false;
+                if (processingIndicator) processingIndicator.SetActive(false);
             }
             finally
             {
-                isProcessing = false;
-                if (processingIndicator) processingIndicator.SetActive(false);
-                if (statusText) statusText.text = "Press V to talk";
+                // Only reset UI state if using cloud processing (local processing handles this in callbacks)
+                if (!useLocalVoiceProcessing)
+                {
+                    isProcessing = false;
+                    if (processingIndicator) processingIndicator.SetActive(false);
+                    if (statusText) statusText.text = "Press V to talk";
+                }
             }
         }
         
@@ -487,6 +691,44 @@ namespace MateEngine.Voice
             // Try to convert audio data to AudioClip
             // For MP3 data from OpenAI TTS, we need a more sophisticated converter
             return AudioFormatConverter.ConvertMP3ToAudioClip(audioData, "TTSResponse");
+        }
+        
+        private void PlayResponseAudio(AudioClip audioClip)
+        {
+            if (responseAudioSource && voiceSettings.enableVoiceFeedback && audioClip != null)
+            {
+                Debug.Log($"[VoiceInteraction] Playing response audio: {audioClip.length}s");
+                
+                // Set volume
+                responseAudioSource.volume = voiceSettings.responseVolume;
+                
+                // Play the audio
+                responseAudioSource.clip = audioClip;
+                responseAudioSource.Play();
+                
+                // Update avatar animation
+                if (avatarAnimator) avatarAnimator.SetBool(isTalkingParam, true);
+                
+                // Start lip sync coroutine
+                StartCoroutine(AnimateLipSync(audioClip));
+                
+                // Stop talking animation when audio finishes
+                StartCoroutine(WaitForAudioComplete(audioClip.length));
+            }
+            else
+            {
+                Debug.LogWarning("[VoiceInteraction] Cannot play audio - AudioSource not configured or audio clip is null");
+            }
+        }
+        
+        private IEnumerator WaitForAudioComplete(float duration)
+        {
+            yield return new WaitForSeconds(duration);
+            
+            // Reset avatar animation
+            if (avatarAnimator) avatarAnimator.SetBool(isTalkingParam, false);
+            
+            Debug.Log("[VoiceInteraction] Response audio completed");
         }
         
         public void SetApiKey(string apiKey)

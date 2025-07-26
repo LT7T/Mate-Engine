@@ -49,8 +49,8 @@ namespace MateEngine.Voice
         private void Initialize()
         {
             // Find voice system components
-            voiceManager = FindObjectOfType<VoiceInteractionManager>();
-            voiceUI = FindObjectOfType<VoiceInteractionUI>();
+            voiceManager = FindFirstObjectByType<VoiceInteractionManager>();
+            voiceUI = FindFirstObjectByType<VoiceInteractionUI>();
             
             if (voiceManager == null)
             {
@@ -77,7 +77,7 @@ namespace MateEngine.Voice
             voiceManager.responseAudioSource = audioSource;
             
             // Try to find avatar animator
-            Animator avatarAnimator = FindObjectOfType<Animator>();
+            Animator avatarAnimator = FindFirstObjectByType<Animator>();
             if (avatarAnimator) voiceManager.avatarAnimator = avatarAnimator;
             
             Debug.Log("[VoiceMenuIntegration] Created default VoiceInteractionManager instance");

@@ -18,7 +18,8 @@ namespace Lachee.Discord.Editor
 
 		static DiscordNativeInstall()
 		{
-			if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) == ApiCompatibilityLevel.NET_2_0_Subset)
+			var namedBuildTarget = UnityEditor.Build.NamedBuildTarget.Standalone;
+			if (PlayerSettings.GetApiCompatibilityLevel(namedBuildTarget) == ApiCompatibilityLevel.NET_2_0_Subset)
 			{
 				var result = EditorUtility.DisplayDialog("Incompatible API Level", "You are currently using the .NET 2.0 Subset in this project. Discord RPC is incompatible with this version and requires the full version.\r\n\r\n" +
 					"Failure to change to the full version of .NET 2.0 may break builds and hard crash the game.\r\n\r\n" +
@@ -26,7 +27,7 @@ namespace Lachee.Discord.Editor
 
 				if (result)
 				{
-					PlayerSettings.SetApiCompatibilityLevel(BuildTargetGroup.Standalone, ApiCompatibilityLevel.NET_2_0);
+					PlayerSettings.SetApiCompatibilityLevel(namedBuildTarget, ApiCompatibilityLevel.NET_2_0);
 					Debug.Log("Converted project to .NET 2.0 successfully");
 				}
 				else

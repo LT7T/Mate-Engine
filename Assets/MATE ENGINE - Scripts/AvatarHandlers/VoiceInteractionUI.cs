@@ -48,7 +48,7 @@ namespace MateEngine.Voice
         
         private void InitializeUI()
         {
-            voiceManager = FindObjectOfType<VoiceInteractionManager>();
+            voiceManager = FindFirstObjectByType<VoiceInteractionManager>();
             if (voiceManager == null)
             {
                 Debug.LogError("[VoiceUI] VoiceInteractionManager not found!");

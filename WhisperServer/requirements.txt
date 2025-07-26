@@ -1,0 +1,7 @@
+# Whisper Server Dependencies
+flask==2.3.3
+flask-cors==4.0.0
+openai-whisper
+torch>=2.0.0
+torchaudio>=2.0.0
+Werkzeug==2.3.7

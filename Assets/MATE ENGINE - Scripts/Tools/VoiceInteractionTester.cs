@@ -48,9 +48,9 @@ namespace MateEngine.Voice.Tests
         private void InitializeTestSystem()
         {
             // Find voice system components
-            voiceManager = FindObjectOfType<VoiceInteractionManager>();
-            voiceUI = FindObjectOfType<VoiceInteractionUI>();
-            menuIntegration = FindObjectOfType<VoiceMenuIntegration>();
+            voiceManager = FindFirstObjectByType<VoiceInteractionManager>();
+            voiceUI = FindFirstObjectByType<VoiceInteractionUI>();
+            menuIntegration = FindFirstObjectByType<VoiceMenuIntegration>();
             
             // Setup UI
             if (testPanel && !showDebugUI)

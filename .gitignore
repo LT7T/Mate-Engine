@@ -75,3 +75,35 @@ Assets/AssetStoreTools*
 Assets/Example Avatar - USED FOR MATE ENGINE
 ProjectSettings/Packages
 UserSettings/Layouts
+
+# Python and Voice System
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+.env
+.venv
+ENV/
+env.bak/
+venv.bak/
+.cache/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# AI Model downloads and cache
+*.gguf
+*.bin
+*.safetensors
+models/
+.cache/
+.triton/
+.huggingface/
+
+# Voice system temporary files
+*.wav
+*.mp3
+*.flac
+temp_audio/
