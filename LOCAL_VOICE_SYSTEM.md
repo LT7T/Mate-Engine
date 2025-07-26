@@ -41,11 +41,11 @@ The Mate Engine now includes a complete local voice processing system that provi
 
 If you prefer manual setup:
 
-1. **Install Python 3.11** from [python.org](https://python.org) (optimal for TTS compatibility)
+1. **Install Python 3.8+** from [python.org](https://python.org)
 
 2. **Create virtual environment:**
    ```bash
-   python3.11 -m venv venv
+   python -m venv venv
    source venv/bin/activate  # Linux/macOS
    venv\Scripts\activate.bat  # Windows
    ```
@@ -55,8 +55,6 @@ If you prefer manual setup:
    cd WhisperServer && pip install -r requirements.txt && cd ..
    cd TTSServer && pip install -r requirements.txt && cd ..
    ```
-
-**Note**: TTS requires Python 3.9-3.11. Python 3.12+ is not supported by Coqui TTS.
 
 ## How It Works
 
