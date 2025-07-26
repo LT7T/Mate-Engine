@@ -26,7 +26,6 @@ public class AvatarBubbleHandler : MonoBehaviour
     private Vector3 originalScale = Vector3.one;
     private float currentLerp = 0f;
     private bool wasActive = false;
-    private bool initialized = false;
     public static List<AvatarBubbleHandler> ActiveHandlers = new List<AvatarBubbleHandler>();
 
 

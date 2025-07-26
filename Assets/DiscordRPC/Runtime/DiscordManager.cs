@@ -101,8 +101,8 @@ namespace Lachee.Discord
 		[HideInInspector] public UnityEvent<ConnectionFailedMessage> OnConnectionFailed;
 #else
 #pragma warning disable CS0618 // Type or member is obsolete
-        public UnityReadyEvent OnReady;
-        public UnityCloseEvent OnClose;
+		public UnityReadyEvent OnReady;
+		public UnityCloseEvent OnClose;
 		public UnityPresenceEvent OnPresence;
 		public UnityJoinEvent OnJoin;
 		[HideInInspector] public UnitySubscribeEvent OnSubscribe;
@@ -137,9 +137,9 @@ namespace Lachee.Discord
 		}   
 
 		private void Awake()
-        {
+		{
 			SetupSingleton();
-        }
+		}
 
 		//Try to initialize the client when we start. This is useful for moments where we are spawned in
 		private void Start()
@@ -173,7 +173,7 @@ namespace Lachee.Discord
 		[UnityEditor.MenuItem("GameObject/Discord Manager", priority = 10)]
 		private static void CreateNewManager()
 		{
-			var prev = FindObjectOfType<DiscordManager>();
+			var prev = Object.FindFirstObjectByType<DiscordManager>();
 			if (prev == null)
 			{
 				var go = new GameObject("Discord Manager");
@@ -191,7 +191,7 @@ namespace Lachee.Discord
 #endregion
 
 		private void SetupSingleton()
-        {
+		{
 			//This has a instance already that isn't us
 			if (_instance != null && _instance != this)
 			{
@@ -236,9 +236,9 @@ namespace Lachee.Discord
 				logger = new Control.UnityLogger() { Level = logLevel };
 			} 
 			else
-            {
+			{
 				logger = new DiscordRPC.Logging.FileLogger(logFile) { Level = logLevel };
-            }
+			}
 
 			//We are starting the client. Below is a break down of the parameters.
 			Debug.Log("[DRP] Starting Discord Rich Presence");

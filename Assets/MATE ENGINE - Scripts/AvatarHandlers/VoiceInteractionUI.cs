@@ -32,7 +32,6 @@ namespace MateEngine.Voice
         private VoiceInteractionManager voiceManager;
         private bool isVoiceEnabled = false;
         private RectTransform[] waveformBars_;
-        private float basePulseScale = 1f;
         
         void Start()
         {
@@ -168,7 +167,7 @@ namespace MateEngine.Voice
                 float[] spectrum = new float[64];
                 AudioListener.GetSpectrumData(spectrum, 0, FFTWindow.Rectangular);
                 
-                for (int i = 0; i < waveformBars.Length && i < spectrum.Length; i++)
+                for (int i = 0; i < waveformBars_.Length && i < spectrum.Length; i++)
                 {
                     float height = spectrum[i] * 1000f; // Scale for visibility
                     Vector2 sizeDelta = waveformBars_[i].sizeDelta;

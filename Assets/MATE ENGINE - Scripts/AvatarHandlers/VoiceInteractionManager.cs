@@ -1,3 +1,18 @@
+        private IEnumerator AnimateLipSync(AudioClip audioClip)
+        {
+            // TODO: Implement lip sync animation logic
+            float duration = audioClip ? audioClip.length : 0f;
+            float timer = 0f;
+            while (timer < duration)
+            {
+                // Example: animate blendshapes or avatar mouth
+                // blendshapeController?.SetLipSyncValue(Random.value);
+                yield return null;
+                timer += Time.deltaTime;
+            }
+            // Reset blendshape/mouth after lip sync
+            // blendshapeController?.SetLipSyncValue(0f);
+        }
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -460,7 +475,20 @@ namespace MateEngine.Voice
                 {
                     // Use cloud API processing
                     byte[] audioData = AudioUtils.AudioClipToWav(processedClip);
-                    yield return StartCoroutine(SendSpeechToTextRequest(audioData));
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[VoiceInteraction] Error processing voice input: {e.Message}");
+                if (statusText) statusText.text = "Error processing voice";
+                isProcessing = false;
+                yield break;
+            }
+            if (!useLocalVoiceProcessing || localVoiceProcessor == null)
+            {
+                // Use cloud API processing
+                byte[] audioData = AudioUtils.AudioClipToWav(processedClip);
+                yield return StartCoroutine(SendSpeechToTextRequest(audioData));
                 }
             }
             catch (Exception e)

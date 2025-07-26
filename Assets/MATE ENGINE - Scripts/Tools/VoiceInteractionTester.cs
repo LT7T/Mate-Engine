@@ -160,7 +160,12 @@ namespace MateEngine.Voice.Tests
                 try
                 {
                     AudioClip testClip = Microphone.Start(device, false, 1, 44100);
-                    yield return new WaitForSeconds(0.1f);
+                }
+                catch (System.Exception e)
+                {
+                    LogTestResult($"Microphone recording failed: {e.Message}", false);
+                }
+                yield return new WaitForSeconds(0.1f);
                     Microphone.End(device);
                     
                     bool recordingSuccessful = testClip != null;

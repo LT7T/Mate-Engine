@@ -1,4 +1,5 @@
 using UnityEngine;
+using MateEngine.Voice.Tests;
 using UnityEngine.UI;
 
 namespace MateEngine.Voice
@@ -205,7 +206,7 @@ namespace MateEngine.Voice
             statusRect.anchoredPosition = Vector2.zero;
             statusRect.sizeDelta = new Vector2(400, 50);
             
-            Text statusText = statusTextObj.AddComponent<Text>();
+            TMPro.TextMeshProUGUI statusText = statusTextObj.AddComponent<TMPro.TextMeshProUGUI>();
             statusText.text = "Voice interaction disabled";
             statusText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             statusText.fontSize = 16;

@@ -10,6 +10,15 @@ namespace MateEngine.Voice.Utils
     public static class AudioUtils
     {
         /// <summary>
+        /// Convert WAV byte array to AudioClip (stub implementation)
+        /// </summary>
+        public static AudioClip WavToAudioClip(byte[] wavData)
+        {
+            // TODO: Implement proper WAV parsing if needed
+            Debug.LogWarning("AudioUtils.WavToAudioClip is a stub. Implement WAV parsing as needed.");
+            return null;
+        }
+        /// <summary>
         /// Convert AudioClip to WAV format bytes
         /// </summary>
         public static byte[] AudioClipToWav(AudioClip clip)
