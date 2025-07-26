@@ -40,28 +40,62 @@ namespace MateEngine.Voice
             // Step 1: Setup core voice manager
             VoiceInteractionManager voiceManager = SetupVoiceManager();
             
-            // Step 2: Setup UI components
+            // Step 2: Setup local voice processing
+            SetupLocalVoiceProcessing(voiceManager);
+            
+            // Step 3: Setup UI components
             if (createUIIfMissing)
             {
                 SetupVoiceUI(voiceManager);
             }
             
-            // Step 3: Integrate with existing menu
+            // Step 4: Integrate with existing menu
             if (integrateWithExistingMenu)
             {
                 SetupMenuIntegration(voiceManager);
             }
             
-            // Step 4: Configure default settings
+            // Step 5: Configure default settings
             ConfigureDefaultSettings(voiceManager);
             
             Debug.Log("[VoiceSetup] Voice interaction system setup complete!");
         }
         
+        private void SetupLocalVoiceProcessing(VoiceInteractionManager voiceManager)
+        {
+            Debug.Log("[VoiceSetup] Setting up local voice processing...");
+            
+            // Create VoiceServerManager if it doesn't exist
+            VoiceServerManager serverManager = FindFirstObjectByType<VoiceServerManager>();
+            if (serverManager == null)
+            {
+                GameObject serverObj = new GameObject("VoiceServerManager");
+                serverManager = serverObj.AddComponent<VoiceServerManager>();
+                Debug.Log("[VoiceSetup] Created VoiceServerManager");
+            }
+            
+            // Create LocalVoiceProcessor if it doesn't exist
+            LocalVoiceProcessor processor = FindFirstObjectByType<LocalVoiceProcessor>();
+            if (processor == null)
+            {
+                GameObject processorObj = new GameObject("LocalVoiceProcessor");
+                processor = processorObj.AddComponent<LocalVoiceProcessor>();
+                processor.serverManager = serverManager;
+                Debug.Log("[VoiceSetup] Created LocalVoiceProcessor");
+            }
+            
+            // Configure voice manager to use local processing
+            voiceManager.useLocalVoiceProcessing = true;
+            voiceManager.voiceServerManager = serverManager;
+            voiceManager.localVoiceProcessor = processor;
+            
+            Debug.Log("[VoiceSetup] Local voice processing configured");
+        }
+        
         private VoiceInteractionManager SetupVoiceManager()
         {
             // Check if voice manager already exists
-            VoiceInteractionManager existing = FindObjectOfType<VoiceInteractionManager>();
+            VoiceInteractionManager existing = FindFirstObjectByType<VoiceInteractionManager>();
             if (existing != null)
             {
                 Debug.Log("[VoiceSetup] VoiceInteractionManager already exists");
@@ -76,7 +110,7 @@ namespace MateEngine.Voice
                 target = GameObject.FindWithTag("Avatar");
                 if (target == null)
                 {
-                    Animator avatarAnimator = FindObjectOfType<Animator>();
+                    Animator avatarAnimator = FindFirstObjectByType<Animator>();
                     if (avatarAnimator != null)
                     {
                         target = avatarAnimator.gameObject;
@@ -110,12 +144,12 @@ namespace MateEngine.Voice
             Animator animator = target.GetComponent<Animator>();
             if (animator == null)
             {
-                animator = FindObjectOfType<Animator>();
+                animator = FindFirstObjectByType<Animator>();
             }
             voiceManager.avatarAnimator = animator;
             
             // Try to find blendshape controller
-            UniversalBlendshapes blendshapes = FindObjectOfType<UniversalBlendshapes>();
+            UniversalBlendshapes blendshapes = FindFirstObjectByType<UniversalBlendshapes>();
             voiceManager.blendshapeController = blendshapes;
             
             Debug.Log("[VoiceSetup] VoiceInteractionManager created and configured");
@@ -125,7 +159,7 @@ namespace MateEngine.Voice
         private void SetupVoiceUI(VoiceInteractionManager voiceManager)
         {
             // Check if UI already exists
-            VoiceInteractionUI existing = FindObjectOfType<VoiceInteractionUI>();
+            VoiceInteractionUI existing = FindFirstObjectByType<VoiceInteractionUI>();
             if (existing != null)
             {
                 Debug.Log("[VoiceSetup] VoiceInteractionUI already exists");
@@ -136,7 +170,7 @@ namespace MateEngine.Voice
             Canvas canvas = mainCanvas;
             if (canvas == null)
             {
-                canvas = FindObjectOfType<Canvas>();
+                canvas = FindFirstObjectByType<Canvas>();
             }
             if (canvas == null)
             {
@@ -201,7 +235,7 @@ namespace MateEngine.Voice
         private void SetupMenuIntegration(VoiceInteractionManager voiceManager)
         {
             // Check if menu integration already exists
-            VoiceMenuIntegration existing = FindObjectOfType<VoiceMenuIntegration>();
+            VoiceMenuIntegration existing = FindFirstObjectByType<VoiceMenuIntegration>();
             if (existing != null)
             {
                 Debug.Log("[VoiceSetup] VoiceMenuIntegration already exists");
@@ -280,7 +314,7 @@ namespace MateEngine.Voice
         [ContextMenu("Test Voice System")]
         public void TestVoiceSystem()
         {
-            VoiceInteractionTester tester = FindObjectOfType<VoiceInteractionTester>();
+            VoiceInteractionTester tester = FindFirstObjectByType<VoiceInteractionTester>();
             if (tester == null)
             {
                 GameObject testObj = new GameObject("VoiceInteractionTester");
@@ -293,7 +327,7 @@ namespace MateEngine.Voice
         [ContextMenu("Create Test UI")]
         public void CreateTestUI()
         {
-            VoiceInteractionTester tester = FindObjectOfType<VoiceInteractionTester>();
+            VoiceInteractionTester tester = FindFirstObjectByType<VoiceInteractionTester>();
             if (tester == null)
             {
                 GameObject testObj = new GameObject("VoiceInteractionTester");
@@ -301,7 +335,7 @@ namespace MateEngine.Voice
                 tester.showDebugUI = true;
                 
                 // Create basic test UI
-                Canvas canvas = FindObjectOfType<Canvas>();
+                Canvas canvas = FindFirstObjectByType<Canvas>();
                 if (canvas != null)
                 {
                     GameObject testPanel = new GameObject("VoiceTestPanel");
@@ -324,12 +358,12 @@ namespace MateEngine.Voice
         // Utility methods
         public bool IsVoiceSystemSetup()
         {
-            return FindObjectOfType<VoiceInteractionManager>() != null;
+            return FindFirstObjectByType<VoiceInteractionManager>() != null;
         }
         
         public void EnableVoiceSystem()
         {
-            VoiceInteractionManager voiceManager = FindObjectOfType<VoiceInteractionManager>();
+            VoiceInteractionManager voiceManager = FindFirstObjectByType<VoiceInteractionManager>();
             if (voiceManager != null)
             {
                 voiceManager.ToggleVoiceInteraction(true);
@@ -338,7 +372,7 @@ namespace MateEngine.Voice
         
         public void DisableVoiceSystem()
         {
-            VoiceInteractionManager voiceManager = FindObjectOfType<VoiceInteractionManager>();
+            VoiceInteractionManager voiceManager = FindFirstObjectByType<VoiceInteractionManager>();
             if (voiceManager != null)
             {
                 voiceManager.ToggleVoiceInteraction(false);

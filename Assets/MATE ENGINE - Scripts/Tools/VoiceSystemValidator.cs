@@ -70,7 +70,7 @@ namespace MateEngine.Voice
         
         private void ValidateVoiceManager()
         {
-            VoiceInteractionManager voiceManager = FindObjectOfType<VoiceInteractionManager>();
+            VoiceInteractionManager voiceManager = FindFirstObjectByType<VoiceInteractionManager>();
             voiceManagerFound = voiceManager != null;
             
             if (voiceManagerFound)
@@ -85,7 +85,7 @@ namespace MateEngine.Voice
         
         private void ValidateAudioConfiguration()
         {
-            VoiceInteractionManager voiceManager = FindObjectOfType<VoiceInteractionManager>();
+            VoiceInteractionManager voiceManager = FindFirstObjectByType<VoiceInteractionManager>();
             if (voiceManager != null)
             {
                 audioSourceConfigured = voiceManager.responseAudioSource != null;
@@ -117,7 +117,7 @@ namespace MateEngine.Voice
         
         private void ValidateAPIConfiguration()
         {
-            VoiceInteractionManager voiceManager = FindObjectOfType<VoiceInteractionManager>();
+            VoiceInteractionManager voiceManager = FindFirstObjectByType<VoiceInteractionManager>();
             if (voiceManager != null && voiceManager.voiceSettings != null)
             {
                 apiKeyConfigured = !string.IsNullOrEmpty(voiceManager.voiceSettings.apiKey);
@@ -135,7 +135,7 @@ namespace MateEngine.Voice
         
         private void ValidateUIComponents()
         {
-            VoiceInteractionUI voiceUI = FindObjectOfType<VoiceInteractionUI>();
+            VoiceInteractionUI voiceUI = FindFirstObjectByType<VoiceInteractionUI>();
             uiComponentsFound = voiceUI != null;
             
             if (uiComponentsFound)
@@ -150,7 +150,7 @@ namespace MateEngine.Voice
         
         private void ValidateMenuIntegration()
         {
-            VoiceMenuIntegration menuIntegration = FindObjectOfType<VoiceMenuIntegration>();
+            VoiceMenuIntegration menuIntegration = FindFirstObjectByType<VoiceMenuIntegration>();
             menuIntegrationFound = menuIntegration != null;
             
             if (menuIntegrationFound)

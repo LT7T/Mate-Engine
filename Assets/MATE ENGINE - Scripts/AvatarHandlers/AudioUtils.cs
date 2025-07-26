@@ -258,5 +258,58 @@ namespace MateEngine.Voice.Utils
             clip.SetData(data, 0);
             return clip;
         }
+
+        /// <summary>
+        /// Convert WAV byte array to AudioClip
+        /// </summary>
+        public static AudioClip WavToAudioClip(byte[] wavData)
+        {
+            if (wavData == null || wavData.Length < 44)
+            {
+                Debug.LogError("[AudioUtils] Invalid WAV data");
+                return null;
+            }
+
+            try
+            {
+                // Parse WAV header
+                int headerSize = 44;
+                int channels = System.BitConverter.ToInt16(wavData, 22);
+                int sampleRate = System.BitConverter.ToInt32(wavData, 24);
+                int bitsPerSample = System.BitConverter.ToInt16(wavData, 34);
+                int dataSize = System.BitConverter.ToInt32(wavData, 40);
+
+                if (bitsPerSample != 16)
+                {
+                    Debug.LogError($"[AudioUtils] Unsupported bits per sample: {bitsPerSample}. Only 16-bit WAV is supported.");
+                    return null;
+                }
+
+                // Extract audio data
+                int sampleCount = dataSize / (bitsPerSample / 8);
+                float[] samples = new float[sampleCount];
+
+                for (int i = 0; i < sampleCount; i++)
+                {
+                    int byteIndex = headerSize + i * 2;
+                    if (byteIndex + 1 < wavData.Length)
+                    {
+                        short sample = System.BitConverter.ToInt16(wavData, byteIndex);
+                        samples[i] = sample / 32768f; // Convert to float range [-1, 1]
+                    }
+                }
+
+                // Create AudioClip
+                AudioClip clip = AudioClip.Create("GeneratedSpeech", sampleCount / channels, channels, sampleRate, false);
+                clip.SetData(samples, 0);
+
+                return clip;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[AudioUtils] Error converting WAV to AudioClip: {e.Message}");
+                return null;
+            }
+        }
     }
 }
